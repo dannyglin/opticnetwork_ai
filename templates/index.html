@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Query Bot</title>
+</head>
+<body>
+    <h1>Ask the Bot</h1>
+    <form id="queryForm">
+        <label for="question">Question:</label><br>
+        <input type="text" id="question" name="question"><br><br>
+        <input type="submit" value="Submit">
+    </form>
+    <p id="response"></p>
+
+    <script>
+        document.getElementById('queryForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const question = document.getElementById('question').value;
+            const response = await fetch('/query', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ question }),
+            });
+            const data = await response.json();
+            document.getElementById('response').innerText = data.answer;
+        });
+    </script>
+</body>
+</html>

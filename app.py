@@ -1,27 +1,18 @@
+from flask import Flask, request, jsonify, render_template
 import pandas as pd
-from openai import OpenAI
 import numpy as np
-import os
+from openai import OpenAI
 
 # Initialize OpenAI client
 client = OpenAI(api_key="your_api_key")  # Ensure you set your OpenAI API key
 
-# Function to get embedding
+# Load the dataframe with embeddings
+df = pd.read_pickle('./website-with-embeddings.pkl')
+
 def get_embedding(text, model="text-embedding-ada-002"):
     text = text.replace("\n", " ")
     return client.embeddings.create(input=[text], model=model).data[0].embedding
 
-# Load the dataset
-df = pd.read_csv('path_to_your_csv')  # Replace 'path_to_your_csv' with your actual file path
-
-# Generate embeddings for the text in the dataframe
-df['embedding'] = df['text'].apply(get_embedding)
-
-# Save the dataframe with embeddings
-df.to_csv('./website-with-embeddings.csv', index=False)
-df.to_pickle('./website-with-embeddings.pkl')
-
-# Function to handle queries
 def query(question):
     # Get the embedding for the question
     question_embedding = get_embedding(question)
@@ -49,5 +40,18 @@ def query(question):
     
     return response.choices[0].message.content
 
-# Example query
-print(query("What is optic networks?"))
+app = Flask(__name__)
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/query', methods=['POST'])
+def query_endpoint():
+    data = request.json
+    question = data['question']
+    answer = query(question)
+    return jsonify({"answer": answer})
+
+if __name__ == '__main__':
+    app.run(debug=True)
